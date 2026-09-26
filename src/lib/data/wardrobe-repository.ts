@@ -1,6 +1,39 @@
-import { CLOTHING_TYPES, type ItemDTO } from "@/lib/contracts/wardrobe";
+import { CLOTHING_TYPES, type ClothingType, type ItemDTO } from "@/lib/contracts/wardrobe";
 import type { ItemCounts, WardrobeDocument, WardrobeRepository } from "@/lib/contracts/persistence";
+import { decodeItemCursor, encodeItemCursor } from "./item-cursor";
 import { getDatabase } from "./mongodb";
+
+// Keep the catalogue's category order, with newest items first within each category.
+export async function listActiveItemsPage({ type, limit, cursor }: {
+  type?: ClothingType; limit: number; cursor?: string;
+}): Promise<{ documents: WardrobeDocument[]; nextCursor: string | null }> {
+  const after = cursor ? decodeItemCursor(cursor, type) : undefined;
+  const categories = type ? [type] : CLOTHING_TYPES.slice(after ? CLOTHING_TYPES.indexOf(after.type) : 0);
+  const collection = (await getDatabase()).collection<WardrobeDocument>("wardrobe_items");
+  const documents: WardrobeDocument[] = [];
+  // Read one extra item to know whether another page exists, including across categories.
+  for (const category of categories) {
+    const createdAt = after ? new Date(after.createdAt) : undefined;
+    const rows = await collection.find({
+      deletedAt: null, type: category,
+      ...(after && category === after.type ? { $or: [
+        { createdAt: { $lt: createdAt } },
+        { createdAt, _id: { $lt: after.id } },
+      ] } : {}),
+    }).sort({ createdAt: -1, _id: -1 }).limit(limit + 1 - documents.length).toArray();
+    documents.push(...rows);
+    if (documents.length > limit) break;
+  }
+  const hasMore = documents.length > limit;
+  const page = documents.slice(0, limit);
+  const last = page.at(-1);
+  return {
+    documents: page,
+    nextCursor: hasMore && last ? encodeItemCursor({
+      version: 1, filter: type ?? null, type: last.type, createdAt: last.createdAt.toISOString(), id: last._id,
+    }) : null,
+  };
+}
 
 export function toItemDTO(document: WardrobeDocument): ItemDTO {
   return {

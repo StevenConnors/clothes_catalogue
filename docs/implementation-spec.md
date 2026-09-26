@@ -186,6 +186,9 @@ export interface ListItemsResponse {
 }
 
 export interface GetItemResponse { item: ItemDTO }
+export interface ListItemsPageResponse extends ListItemsResponse {
+  nextCursor: string | null;
+}
 export interface UpdateItemRequest { type: ClothingType }
 export interface UpdateItemResponse { item: ItemDTO }
 
@@ -268,7 +271,7 @@ Every catalogue endpoint requires the single authorized session, including image
 
 | Method and endpoint | Input | Success |
 | --- | --- | --- |
-| `GET /api/items` | Optional `?type=outer` etc. Omitted means All. | `200 ListItemsResponse` |
+| `GET /api/items` | Optional `?type=outer` etc. Omitted means All. Add `limit` (1–48, default 24) or `cursor` to request a page. | `200 ListItemsResponse`, or `ListItemsPageResponse` when pagination is requested |
 | `GET /api/items/:id` | Valid UUID | `200 GetItemResponse` |
 | `PATCH /api/items/:id` | JSON containing exactly `{ "type": "shirt" }` | `200 UpdateItemResponse` |
 | `DELETE /api/items/:id` | Valid UUID | `204`, no response body |
@@ -283,7 +286,8 @@ Rules:
 - Check same-origin requests for PATCH and DELETE in addition to session authorization; a missing or mismatched Origin is `403 FORBIDDEN`. Use the request's actual origin or a configured trusted origin according to the deployment setup; do not trust an arbitrary client-supplied origin.
 - Resolve an image's storage pathname from the database record. Do not accept a Blob pathname or arbitrary remote URL from the browser.
 - Generate DTO image URLs as `/api/items/${id}/image?variant=cutout` and `/api/items/${id}/image?variant=original`.
-- Return all matching items for this small personal catalogue. Do not introduce pagination unless actual scale requires it.
+- Calls without `limit` or `cursor` return all matching items for existing API clients. The catalogue uses pages of 24, ordered by clothing type in `CLOTHING_TYPES` order, then newest `createdAt` and descending ID within each type. Cursors encode the last item and selected filter; reject malformed cursors or a cursor from a different filter with `400 INVALID_REQUEST`. `total` always counts all matching active items, and `nextCursor: null` ends pagination. Later pages retain the same owner authorization and private cache headers.
+- Render the initial catalogue page on the server. Automatically load subsequent pages with an `IntersectionObserver` using an 800px prefetch margin, deduplicate appended IDs, and cancel requests when the grid unmounts or filters change. Keep a manual Load more button; stop automatic loading after an error and offer Try again without clearing existing cards.
 - Use private, non-shared cache behavior for catalogue JSON and images; start with `Cache-Control: private, no-store`.
 - Missing services at request time return a clear failure, not an empty successful catalogue. Do not expose database URIs, provider errors, or tokens in responses.
 - Route handlers must be compatible with the installed Next.js version, including dynamic route parameter handling.

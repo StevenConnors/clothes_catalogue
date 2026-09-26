@@ -2,6 +2,8 @@
 
 A private, single-owner wardrobe catalogue. Browse garment cutouts, filter six clothing types, correct a type, view originals, and hide items. Photos are prepared locally and imported only after review; the website has no upload or AI endpoint.
 
+The catalogue renders the first 24 items on the server, then loads more as you scroll, using the photo-gallery pattern from `~/github/me/components/photos/PhotosGallery.tsx`. A keyboard-accessible **Load more** button also works without automatic scrolling; failed requests keep the existing cards and offer **Try again**. Category filters restart pagination. Run `npm run wardrobe:indexes` to add the index used by category pagination.
+
 Start with [setup](docs/setup.md), then use the [photo-batch workflow](docs/codex-photo-workflow.md). [Verification](docs/verification.md) records actual checks and remaining live gates. The full implementation contract is in [implementation specification](docs/implementation-spec.md).
 
 ```sh

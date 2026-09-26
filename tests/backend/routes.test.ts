@@ -1,20 +1,23 @@
 import type { WardrobeDocument } from "@/lib/contracts/persistence";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-const { authMock, repoMock, storeMock } = vi.hoisted(() => ({
+const { authMock, repoMock, storeMock, pageMock } = vi.hoisted(() => ({
   authMock: vi.fn(),
   repoMock: { getActiveById: vi.fn(), listActive: vi.fn(), countActiveByType: vi.fn(), updateType: vi.fn(), softDelete: vi.fn() },
   storeMock: { readPrivate: vi.fn() },
+  pageMock: vi.fn(),
 }));
 vi.mock("@/lib/auth", () => ({ auth: authMock }));
 vi.mock("@/lib/data/wardrobe-repository", () => ({
   getWardrobeRepository: () => repoMock,
+  listActiveItemsPage: pageMock,
   toItemDTO: (x: WardrobeDocument) => ({ id: x._id, type: x.type, images: { cutout: `/api/items/${x._id}/image?variant=cutout`, original: `/api/items/${x._id}/image?variant=original` }, createdAt: x.createdAt.toISOString(), updatedAt: x.updatedAt.toISOString() }),
 }));
 vi.mock("@/lib/storage/blob", () => ({ getImageStore: () => storeMock }));
 
 import { GET as listItems } from "@/app/api/items/route";
 import { GET as getImage } from "@/app/api/items/[id]/image/route";
+import { encodeItemCursor } from "@/lib/data/item-cursor";
 
 const validId = "a2912d73-45dc-4214-a61a-b2b3318ace1f";
 beforeEach(() => {
@@ -30,6 +33,7 @@ describe("catalogue route authorization", () => {
     expect(response.status).toBe(401);
     expect(await response.json()).toMatchObject({ error: { code: "UNAUTHORIZED" } });
     expect(repoMock.listActive).not.toHaveBeenCalled();
+    expect(pageMock).not.toHaveBeenCalled();
   });
 
   it("returns 403 for a signed-in non-owner", async () => {
@@ -38,6 +42,7 @@ describe("catalogue route authorization", () => {
     expect(response.status).toBe(403);
     expect(await response.json()).toMatchObject({ error: { code: "FORBIDDEN" } });
     expect(repoMock.listActive).not.toHaveBeenCalled();
+    expect(pageMock).not.toHaveBeenCalled();
   });
 
   it("hides image bytes for a removed or missing item", async () => {
@@ -126,6 +131,42 @@ describe("catalogue validation and mutations", () => {
     expect(response.status).toBe(200);
     expect(await response.json()).toMatchObject({ total: 1, counts: { outer: 2, shirt: 1, pants: 1 } });
     expect(repoMock.listActive).toHaveBeenCalledWith("shirt");
+  });
+
+  it("returns a bounded page with a cursor and the full matching total", async () => {
+    const cursor = encodeItemCursor({ version: 1, filter: "shirt", type: "shirt", createdAt: activeDoc().createdAt.toISOString(), id: validId });
+    pageMock.mockResolvedValue({ documents: [activeDoc()], nextCursor: cursor });
+    repoMock.countActiveByType.mockResolvedValue({ outer: 2, shirt: 8, tshirt: 0, pants: 1, shorts: 0, shoes: 0 });
+    const response = await listItems(new Request("https://wardrobe.test/api/items?type=shirt&limit=1"));
+    expect(response.status).toBe(200);
+    expect(response.headers.get("cache-control")).toBe("private, no-store");
+    expect(await response.json()).toMatchObject({ total: 8, nextCursor: cursor, items: [{ id: validId }] });
+    expect(pageMock).toHaveBeenCalledWith({ type: "shirt", limit: 1 });
+    expect(repoMock.listActive).not.toHaveBeenCalled();
+    const next = await listItems(new Request(`https://wardrobe.test/api/items?type=shirt&cursor=${cursor}`));
+    expect(next.status).toBe(200);
+    expect(pageMock).toHaveBeenLastCalledWith({ type: "shirt", limit: 24, cursor });
+  });
+
+  it("reports all-category totals independently of the returned page size", async () => {
+    pageMock.mockResolvedValue({ documents: [activeDoc()], nextCursor: null });
+    repoMock.countActiveByType.mockResolvedValue({ outer: 2, shirt: 8, tshirt: 0, pants: 1, shorts: 0, shoes: 0 });
+    const response = await listItems(new Request("https://wardrobe.test/api/items?limit=24"));
+    expect(await response.json()).toMatchObject({ total: 11, nextCursor: null });
+  });
+
+  it.each(["limit=0", "limit=49", "limit=1.5", "limit=nope", "cursor=", "cursor=invalid", "type=dress&limit=24"])("rejects invalid pagination before reading items: %s", async query => {
+    const response = await listItems(new Request(`https://wardrobe.test/api/items?${query}`));
+    expect(response.status).toBe(400);
+    expect(await response.json()).toMatchObject({ error: { code: "INVALID_REQUEST" } });
+    expect(pageMock).not.toHaveBeenCalled();
+  });
+
+  it.each([null, { user: { id: "other" } }])("protects later pages with the same owner authorization", async session => {
+    authMock.mockResolvedValue(session);
+    const response = await listItems(new Request("https://wardrobe.test/api/items?limit=24&cursor=invalid"));
+    expect(response.status).toBe(session ? 403 : 401);
+    expect(pageMock).not.toHaveBeenCalled();
   });
 
   it("persists a valid type change and repeated soft-delete requests", async () => {
