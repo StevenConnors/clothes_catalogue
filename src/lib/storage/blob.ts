@@ -53,7 +53,8 @@ export function getImageStore(): ImageStore {
     },
     async readPrivate(image) {
       try {
-        const result = await get(image.pathname, { access: "private", useCache: false });
+        // Imported objects are immutable; private CDN reads avoid origin latency.
+        const result = await get(image.pathname, { access: "private", useCache: true });
         if (!result || result.statusCode !== 200 || !result.stream) return null;
         return { body: result.stream, contentType: result.blob.contentType || image.contentType };
       } catch (error) {

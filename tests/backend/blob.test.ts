@@ -10,6 +10,12 @@ const bytes = Buffer.from("private image bytes");
 beforeEach(() => vi.resetAllMocks());
 
 describe("private immutable Blob adapter", () => {
+  it("uses the private CDN cache for immutable image reads", async () => {
+    getMock.mockResolvedValue({ statusCode: 200, stream: stream(bytes), blob: { contentType: "image/png" } });
+    const result = await getImageStore().readPrivate({ pathname: "wardrobe/cutout", contentType: "image/png" });
+    expect(result?.contentType).toBe("image/png");
+    expect(getMock).toHaveBeenCalledWith("wardrobe/cutout", { access: "private", useCache: true });
+  });
   it("reuses a byte-identical private object without uploading", async () => {
     getMock.mockResolvedValue({ statusCode: 200, stream: stream(bytes), blob: { pathname: "wardrobe/original", contentType: "image/jpeg" } });
     const result = await getImageStore().putPrivate("wardrobe/original", bytes, "image/jpeg");

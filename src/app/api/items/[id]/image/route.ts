@@ -4,6 +4,7 @@ import { ImageVariantSchema, ItemIdSchema } from "@/lib/contracts/wardrobe";
 import { requireOwner } from "@/lib/authorization";
 import { getWardrobeRepository } from "@/lib/data/wardrobe-repository";
 import { getImageStore } from "@/lib/storage/blob";
+import { readThumbnail } from "@/lib/storage/thumbnail";
 import { apiError, errorResponse, privateHeaders } from "@/lib/api";
 
 type Context = { params: Promise<{ id: string }> };
@@ -12,11 +13,23 @@ export async function GET(request: Request, context: Context) {
     await requireOwner();
     const { id } = await context.params;
     if (!ItemIdSchema.safeParse(id).success) return errorResponse("INVALID_REQUEST", "Invalid item ID.", 400);
-    const variant = ImageVariantSchema.safeParse(new URL(request.url).searchParams.get("variant"));
+    const query = new URL(request.url).searchParams;
+    const variant = ImageVariantSchema.safeParse(query.get("variant"));
     if (!variant.success) return errorResponse("INVALID_REQUEST", "Invalid image variant.", 400);
+    const size = query.get("size");
+    if (size !== null && (size !== "thumbnail" || variant.data !== "cutout")) {
+      return errorResponse("INVALID_REQUEST", "Invalid image size.", 400);
+    }
     const item = await getWardrobeRepository().getActiveById(id);
     if (!item) return errorResponse("NOT_FOUND", "Item not found.", 404);
     const image = item.images[variant.data];
+    if (size === "thumbnail") {
+      const thumbnail = await readThumbnail(image);
+      if (!thumbnail) return errorResponse("NOT_FOUND", "Image not found.", 404);
+      return new NextResponse(new Uint8Array(thumbnail), {
+        headers: { ...privateHeaders, "Content-Type": "image/webp", "X-Content-Type-Options": "nosniff" },
+      });
+    }
     const found = await getImageStore().readPrivate(image);
     if (!found) return errorResponse("NOT_FOUND", "Image not found.", 404);
     return new NextResponse(found.body, {

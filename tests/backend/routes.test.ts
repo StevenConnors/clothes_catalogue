@@ -55,6 +55,7 @@ describe("catalogue route authorization", () => {
 
 import { GET as getItem, PATCH, DELETE } from "@/app/api/items/[id]/route";
 import { BlobServiceNotAvailable } from "@vercel/blob";
+import sharp from "sharp";
 
 const activeDoc = () => ({
   _id: validId, type: "shirt", sourceSha256: "a".repeat(64),
@@ -69,6 +70,35 @@ const ownerRequest = (url: string, init: RequestInit = {}) => new Request(url, {
 
 describe("catalogue validation and mutations", () => {
   beforeEach(() => authMock.mockResolvedValue({ user: { id: "123456" } }));
+
+  it("serves a small transparent thumbnail, reuses it, and still checks access on every request", async () => {
+    const png = await sharp({ create: { width: 1600, height: 1600, channels: 4, background: { r: 30, g: 80, b: 40, alpha: 0.5 } } }).png().toBuffer();
+    repoMock.getActiveById.mockResolvedValue({ ...activeDoc(), images: { ...activeDoc().images, cutout: { pathname: "thumbnail-fixture", contentType: "image/png" } } });
+    storeMock.readPrivate.mockImplementation(async () => ({ body: new ReadableStream({ start(controller) { controller.enqueue(png); controller.close(); } }), contentType: "image/png" }));
+    const request = () => new Request(`https://wardrobe.test/api/items/${validId}/image?variant=cutout&size=thumbnail`);
+    const response = await getImage(request(), ctx);
+    expect(response.status).toBe(200);
+    expect(response.headers.get("content-type")).toBe("image/webp");
+    expect(response.headers.get("cache-control")).toBe("private, no-store");
+    const output = Buffer.from(await response.arrayBuffer());
+    expect(await sharp(output).metadata()).toMatchObject({ width: 640, height: 640, hasAlpha: true });
+    expect(output.length).toBeLessThan(png.length);
+    expect((await getImage(request(), ctx)).status).toBe(200);
+    expect(storeMock.readPrivate).toHaveBeenCalledTimes(1);
+    authMock.mockResolvedValue(null);
+    expect((await getImage(request(), ctx)).status).toBe(401);
+    authMock.mockResolvedValue({ user: { id: "other" } });
+    expect((await getImage(request(), ctx)).status).toBe(403);
+    authMock.mockResolvedValue({ user: { id: "123456" } });
+    repoMock.getActiveById.mockResolvedValue(null);
+    expect((await getImage(request(), ctx)).status).toBe(404);
+    expect(storeMock.readPrivate).toHaveBeenCalledTimes(1);
+  });
+
+  it.each(["variant=cutout&size=huge", "variant=original&size=thumbnail"])("rejects unsupported thumbnail requests: %s", async (query) => {
+    expect((await getImage(new Request(`https://wardrobe.test/api/items/${validId}/image?${query}`), ctx)).status).toBe(400);
+    expect(storeMock.readPrivate).not.toHaveBeenCalled();
+  });
 
   it("rejects malformed IDs and strict PATCH bodies", async () => {
     const malformed = await getItem(ownerRequest("https://wardrobe.test/api/items/nope"), { params: Promise.resolve({ id: "nope" }) });

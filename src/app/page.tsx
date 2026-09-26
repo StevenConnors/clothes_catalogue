@@ -36,8 +36,8 @@ export default async function WardrobePage({ searchParams }: PageProps) {
     <section className="catalogue-heading"><div><p className="eyebrow">YOUR COLLECTION</p><h1>Wardrobe</h1></div></section>
     <TypeFilters selected={selected} counts={counts} total={total} />
     {items.length === 0 ? <section className="empty-state"><div className="empty-mark">W</div><h2>{total === 0 ? "Your wardrobe is ready" : "No items in this category"}</h2><p>{total === 0 ? "Your catalogue will appear here once your first batch is imported." : "Try another clothing type to see more of your wardrobe."}</p>{total > 0 && <Link className="text-link" href="/">View all items</Link>}</section> :
-      <section className="item-grid" aria-label="Wardrobe items">{items.map(item => <Link key={item.id} href={`/items/${item.id}`} className="item-card" aria-label={`View ${CLOTHING_LABELS[item.type]}`}>
-        <div className="card-image"><Image src={item.images.cutout} alt={CLOTHING_LABELS[item.type]} width={600} height={600} unoptimized loading="lazy" className="garment-image" /></div>
+      <section className="item-grid" aria-label="Wardrobe items">{items.map((item, index) => <Link key={item.id} href={`/items/${item.id}`} className="item-card" aria-label={`View ${CLOTHING_LABELS[item.type]}`}>
+        <div className="card-image"><Image src={`${item.images.cutout}&size=thumbnail`} alt={CLOTHING_LABELS[item.type]} width={640} height={640} unoptimized loading={index < 2 ? "eager" : "lazy"} fetchPriority={index === 0 ? "high" : "auto"} className="garment-image" /></div>
       </Link>)}</section>}
   </main>;
 }
