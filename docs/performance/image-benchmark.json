@@ -1,0 +1,490 @@
+{
+  "generatedAt": "2026-09-26T14:42:58.727Z",
+  "runtime": {
+    "node": "v23.11.0",
+    "arch": "arm64",
+    "platform": "darwin",
+    "sharp": "0.35.4"
+  },
+  "method": "3 in-memory encodes per image/width, median per image; aggregate encode time is mean of per-image medians. Local CPU only; not Vercel latency.",
+  "count": 15,
+  "pngBytes": 12080290,
+  "totals": [
+    {
+      "width": 320,
+      "bytes": 259500,
+      "reductionPercent": 97.85,
+      "meanOfMedianEncodeMs": 32.18
+    },
+    {
+      "width": 480,
+      "bytes": 468458,
+      "reductionPercent": 96.12,
+      "meanOfMedianEncodeMs": 46.86
+    },
+    {
+      "width": 640,
+      "bytes": 732102,
+      "reductionPercent": 93.94,
+      "meanOfMedianEncodeMs": 65.11
+    },
+    {
+      "width": 960,
+      "bytes": 1423638,
+      "reductionPercent": 88.22,
+      "meanOfMedianEncodeMs": 106.4
+    }
+  ],
+  "rows": [
+    {
+      "sample": 1,
+      "type": "outer",
+      "width": 1024,
+      "height": 1024,
+      "hasAlpha": true,
+      "pngBytes": 920846,
+      "variants": [
+        {
+          "width": 320,
+          "bytes": 14150,
+          "medianEncodeMs": 32.23
+        },
+        {
+          "width": 480,
+          "bytes": 25640,
+          "medianEncodeMs": 43.42
+        },
+        {
+          "width": 640,
+          "bytes": 42990,
+          "medianEncodeMs": 62.68
+        },
+        {
+          "width": 960,
+          "bytes": 93258,
+          "medianEncodeMs": 104.65
+        }
+      ]
+    },
+    {
+      "sample": 2,
+      "type": "pants",
+      "width": 1024,
+      "height": 1024,
+      "hasAlpha": true,
+      "pngBytes": 894590,
+      "variants": [
+        {
+          "width": 320,
+          "bytes": 21508,
+          "medianEncodeMs": 31.96
+        },
+        {
+          "width": 480,
+          "bytes": 39362,
+          "medianEncodeMs": 47.79
+        },
+        {
+          "width": 640,
+          "bytes": 61542,
+          "medianEncodeMs": 62.07
+        },
+        {
+          "width": 960,
+          "bytes": 121636,
+          "medianEncodeMs": 113.81
+        }
+      ]
+    },
+    {
+      "sample": 3,
+      "type": "pants",
+      "width": 1024,
+      "height": 1024,
+      "hasAlpha": true,
+      "pngBytes": 850053,
+      "variants": [
+        {
+          "width": 320,
+          "bytes": 16972,
+          "medianEncodeMs": 33.39
+        },
+        {
+          "width": 480,
+          "bytes": 30860,
+          "medianEncodeMs": 45.51
+        },
+        {
+          "width": 640,
+          "bytes": 49292,
+          "medianEncodeMs": 65.8
+        },
+        {
+          "width": 960,
+          "bytes": 97188,
+          "medianEncodeMs": 101.08
+        }
+      ]
+    },
+    {
+      "sample": 4,
+      "type": "pants",
+      "width": 1024,
+      "height": 1024,
+      "hasAlpha": true,
+      "pngBytes": 804885,
+      "variants": [
+        {
+          "width": 320,
+          "bytes": 21232,
+          "medianEncodeMs": 32.79
+        },
+        {
+          "width": 480,
+          "bytes": 37588,
+          "medianEncodeMs": 47.76
+        },
+        {
+          "width": 640,
+          "bytes": 58156,
+          "medianEncodeMs": 64.25
+        },
+        {
+          "width": 960,
+          "bytes": 107624,
+          "medianEncodeMs": 108.24
+        }
+      ]
+    },
+    {
+      "sample": 5,
+      "type": "pants",
+      "width": 1024,
+      "height": 1024,
+      "hasAlpha": true,
+      "pngBytes": 865298,
+      "variants": [
+        {
+          "width": 320,
+          "bytes": 18958,
+          "medianEncodeMs": 40.77
+        },
+        {
+          "width": 480,
+          "bytes": 34954,
+          "medianEncodeMs": 66.27
+        },
+        {
+          "width": 640,
+          "bytes": 56416,
+          "medianEncodeMs": 93.57
+        },
+        {
+          "width": 960,
+          "bytes": 118908,
+          "medianEncodeMs": 105.01
+        }
+      ]
+    },
+    {
+      "sample": 6,
+      "type": "pants",
+      "width": 1024,
+      "height": 1024,
+      "hasAlpha": true,
+      "pngBytes": 679865,
+      "variants": [
+        {
+          "width": 320,
+          "bytes": 18716,
+          "medianEncodeMs": 30.68
+        },
+        {
+          "width": 480,
+          "bytes": 31260,
+          "medianEncodeMs": 43.91
+        },
+        {
+          "width": 640,
+          "bytes": 45452,
+          "medianEncodeMs": 60.06
+        },
+        {
+          "width": 960,
+          "bytes": 79648,
+          "medianEncodeMs": 100.6
+        }
+      ]
+    },
+    {
+      "sample": 7,
+      "type": "shirt",
+      "width": 1024,
+      "height": 1024,
+      "hasAlpha": true,
+      "pngBytes": 938634,
+      "variants": [
+        {
+          "width": 320,
+          "bytes": 19048,
+          "medianEncodeMs": 32.3
+        },
+        {
+          "width": 480,
+          "bytes": 34168,
+          "medianEncodeMs": 44.71
+        },
+        {
+          "width": 640,
+          "bytes": 52048,
+          "medianEncodeMs": 61.59
+        },
+        {
+          "width": 960,
+          "bytes": 96246,
+          "medianEncodeMs": 101.34
+        }
+      ]
+    },
+    {
+      "sample": 8,
+      "type": "shirt",
+      "width": 1024,
+      "height": 1024,
+      "hasAlpha": true,
+      "pngBytes": 813006,
+      "variants": [
+        {
+          "width": 320,
+          "bytes": 19598,
+          "medianEncodeMs": 31.48
+        },
+        {
+          "width": 480,
+          "bytes": 35394,
+          "medianEncodeMs": 47.8
+        },
+        {
+          "width": 640,
+          "bytes": 54028,
+          "medianEncodeMs": 60.94
+        },
+        {
+          "width": 960,
+          "bytes": 98386,
+          "medianEncodeMs": 98.31
+        }
+      ]
+    },
+    {
+      "sample": 9,
+      "type": "shirt",
+      "width": 1024,
+      "height": 1024,
+      "hasAlpha": true,
+      "pngBytes": 820378,
+      "variants": [
+        {
+          "width": 320,
+          "bytes": 16622,
+          "medianEncodeMs": 30.56
+        },
+        {
+          "width": 480,
+          "bytes": 31032,
+          "medianEncodeMs": 48.16
+        },
+        {
+          "width": 640,
+          "bytes": 48848,
+          "medianEncodeMs": 61.23
+        },
+        {
+          "width": 960,
+          "bytes": 98404,
+          "medianEncodeMs": 101.3
+        }
+      ]
+    },
+    {
+      "sample": 10,
+      "type": "shirt",
+      "width": 1024,
+      "height": 1024,
+      "hasAlpha": true,
+      "pngBytes": 1203083,
+      "variants": [
+        {
+          "width": 320,
+          "bytes": 24192,
+          "medianEncodeMs": 33.23
+        },
+        {
+          "width": 480,
+          "bytes": 49832,
+          "medianEncodeMs": 44.82
+        },
+        {
+          "width": 640,
+          "bytes": 84558,
+          "medianEncodeMs": 62.44
+        },
+        {
+          "width": 960,
+          "bytes": 172754,
+          "medianEncodeMs": 113.05
+        }
+      ]
+    },
+    {
+      "sample": 11,
+      "type": "shirt",
+      "width": 1024,
+      "height": 1024,
+      "hasAlpha": true,
+      "pngBytes": 585144,
+      "variants": [
+        {
+          "width": 320,
+          "bytes": 10824,
+          "medianEncodeMs": 26.97
+        },
+        {
+          "width": 480,
+          "bytes": 18720,
+          "medianEncodeMs": 37.63
+        },
+        {
+          "width": 640,
+          "bytes": 28260,
+          "medianEncodeMs": 54.3
+        },
+        {
+          "width": 960,
+          "bytes": 55344,
+          "medianEncodeMs": 89.24
+        }
+      ]
+    },
+    {
+      "sample": 12,
+      "type": "shirt",
+      "width": 1024,
+      "height": 1024,
+      "hasAlpha": true,
+      "pngBytes": 568166,
+      "variants": [
+        {
+          "width": 320,
+          "bytes": 10744,
+          "medianEncodeMs": 26.68
+        },
+        {
+          "width": 480,
+          "bytes": 19486,
+          "medianEncodeMs": 37.94
+        },
+        {
+          "width": 640,
+          "bytes": 30802,
+          "medianEncodeMs": 54.07
+        },
+        {
+          "width": 960,
+          "bytes": 62370,
+          "medianEncodeMs": 92.3
+        }
+      ]
+    },
+    {
+      "sample": 13,
+      "type": "outer",
+      "width": 1024,
+      "height": 1024,
+      "hasAlpha": true,
+      "pngBytes": 585269,
+      "variants": [
+        {
+          "width": 320,
+          "bytes": 11090,
+          "medianEncodeMs": 27.66
+        },
+        {
+          "width": 480,
+          "bytes": 18482,
+          "medianEncodeMs": 37.31
+        },
+        {
+          "width": 640,
+          "bytes": 28252,
+          "medianEncodeMs": 53.25
+        },
+        {
+          "width": 960,
+          "bytes": 53330,
+          "medianEncodeMs": 90
+        }
+      ]
+    },
+    {
+      "sample": 14,
+      "type": "shirt",
+      "width": 1024,
+      "height": 1024,
+      "hasAlpha": true,
+      "pngBytes": 919404,
+      "variants": [
+        {
+          "width": 320,
+          "bytes": 19644,
+          "medianEncodeMs": 41.99
+        },
+        {
+          "width": 480,
+          "bytes": 33160,
+          "medianEncodeMs": 68.13
+        },
+        {
+          "width": 640,
+          "bytes": 48558,
+          "medianEncodeMs": 101.13
+        },
+        {
+          "width": 960,
+          "bytes": 92102,
+          "medianEncodeMs": 180.98
+        }
+      ]
+    },
+    {
+      "sample": 15,
+      "type": "outer",
+      "width": 1024,
+      "height": 1024,
+      "hasAlpha": true,
+      "pngBytes": 631669,
+      "variants": [
+        {
+          "width": 320,
+          "bytes": 16202,
+          "medianEncodeMs": 29.99
+        },
+        {
+          "width": 480,
+          "bytes": 28520,
+          "medianEncodeMs": 41.69
+        },
+        {
+          "width": 640,
+          "bytes": 42900,
+          "medianEncodeMs": 59.24
+        },
+        {
+          "width": 960,
+          "bytes": 76440,
+          "medianEncodeMs": 96.08
+        }
+      ]
+    }
+  ]
+}
