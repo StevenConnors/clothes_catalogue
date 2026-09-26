@@ -11,3 +11,6 @@ __pycache__/
 playwright-report/
 test-results/
 *.tsbuildinfo
+
+# Local runtime session artifacts
+*.ses
