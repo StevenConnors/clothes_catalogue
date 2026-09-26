@@ -1,3 +1,4 @@
+import { generateThumbnails, uploadThumbnails } from "../src/lib/images/generate-thumbnails";
 import { loadBatch, validatePreparedEntry } from "./lib/batch-files";
 import { config } from "dotenv";
 import { randomUUID } from "node:crypto";
@@ -55,6 +56,7 @@ export async function importBatch(options: ImportOptions, adapters: ImportAdapte
       }
       planned.push({ sourceSha256: entry.sourceSha256, type });
       if (options.dryRun) continue;
+      const outputs = await generateThumbnails(cutout);
       const sourceExt = sourceType === "image/jpeg" ? "jpg" : "png";
       const originalPath = `wardrobe/${entry.sourceSha256}/original.${sourceExt}`;
       const original = await adapters.imageStore.putPrivate(originalPath, source, sourceType);
@@ -62,18 +64,20 @@ export async function importBatch(options: ImportOptions, adapters: ImportAdapte
       const cutoutPath = `wardrobe/${entry.sourceSha256}/cutout-${entry.cutoutSha256}.png`;
       const cutoutImage = await adapters.imageStore.putPrivate(cutoutPath, cutout, "image/png");
       unreferencedObjects.push(cutoutImage.pathname);
+      const thumbnails = await uploadThumbnails(entry.sourceSha256, outputs, adapters.imageStore, unreferencedObjects);
       const now = new Date();
       const document: WardrobeDocument = {
         _id: (adapters.uuid ?? randomUUID)(), sourceSha256: entry.sourceSha256, type,
-        images: { original, cutout: cutoutImage }, createdAt: now, updatedAt: now, deletedAt: null,
+        images: { original, cutout: cutoutImage, thumbnails }, createdAt: now, updatedAt: now, deletedAt: null,
       };
       const inserted = await adapters.repository.insertIfAbsent(document);
       if (inserted.inserted) {
         report.imported.push({ sourceSha256: entry.sourceSha256, itemId: inserted.document._id });
         unreferencedObjects.splice(unreferencedObjects.indexOf(original.pathname), 1);
         unreferencedObjects.splice(unreferencedObjects.indexOf(cutoutImage.pathname), 1);
+        for (const image of thumbnails) unreferencedObjects.splice(unreferencedObjects.indexOf(image.pathname), 1);
       } else {
-        const retained = new Set([inserted.document.images.original.pathname, inserted.document.images.cutout.pathname]);
+        const retained = new Set([inserted.document.images.original.pathname, inserted.document.images.cutout.pathname, ...(inserted.document.images.thumbnails ?? []).map(image => image.pathname)]);
         for (const pathname of retained) {
           const orphanIndex = unreferencedObjects.indexOf(pathname);
           if (orphanIndex >= 0) unreferencedObjects.splice(orphanIndex, 1);

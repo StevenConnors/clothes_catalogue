@@ -1,14 +1,22 @@
 import type { ClothingType } from "./wardrobe";
 export interface StoredImage {
   pathname: string;
-  contentType: "image/jpeg" | "image/png";
+  contentType: "image/jpeg" | "image/png" | "image/webp";
+}
+
+export interface StoredThumbnail extends StoredImage {
+  contentType: "image/webp";
+  width: number;
+  height: number;
+  sha256: string;
+  version: string;
 }
 
 export interface WardrobeDocument {
   _id: string;                   // UUID, exposed as ItemDTO.id
   sourceSha256: string;          // SHA-256 of unchanged source-file bytes
   type: ClothingType;
-  images: { original: StoredImage; cutout: StoredImage };
+  images: { original: StoredImage; cutout: StoredImage; thumbnails?: StoredThumbnail[] };
   createdAt: Date;
   updatedAt: Date;
   deletedAt: Date | null;

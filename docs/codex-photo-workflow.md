@@ -15,9 +15,9 @@ Process my wardrobe photo batch `<batch-id>` using this repository's documented 
 Commands (activate `.venv` or use its interpreter explicitly):
 
 ```sh
-.venv/bin/python scripts/prepare-batch.py --batch <batch-id>
-.venv/bin/python scripts/prepare-batch.py --batch <batch-id> --limit 3 --benchmark
-.venv/bin/python scripts/prepare-batch.py --batch <batch-id> --reprocess <source-sha256>
+npm run wardrobe:prepare -- --batch <batch-id>
+npm run wardrobe:prepare -- --batch <batch-id> --limit 3 --benchmark
+npm run wardrobe:prepare -- --batch <batch-id> --reprocess <source-sha256>
 .venv/bin/python scripts/review-sheet.py --batch <batch-id>
 npm run wardrobe:approve -- --batch <batch-id> --all
 # Or: --items 1,3-5; or --all --except 3,8

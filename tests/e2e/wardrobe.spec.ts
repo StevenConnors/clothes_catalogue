@@ -47,7 +47,7 @@ test('confirmed removal hides detail and both images while preserving the record
   for(const path of [`/api/items/${id}`,`/api/items/${id}/image?variant=original`,`/api/items/${id}/image?variant=cutout`])expect((await context.request.get(path)).status()).toBe(404);
   expect((await repository.findBySourceHash(document!.sourceSha256))?.deletedAt).toBeTruthy();
   const { getImageStore }=await import('../../src/lib/storage/blob');
-  for(const image of Object.values(document!.images)){const stored=await getImageStore().readPrivate(image);expect(stored).not.toBeNull();await stored?.body.cancel();}
+  for(const image of [document!.images.original, document!.images.cutout, ...(document!.images.thumbnails ?? [])]){const stored=await getImageStore().readPrivate(image);expect(stored).not.toBeNull();await stored?.body.cancel();}
   expect((await context.request.delete(`/api/items/${id}`,{headers:{Origin:baseURL!}})).status()).toBe(204);
  }finally{await context.close();}
 });

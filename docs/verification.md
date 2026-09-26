@@ -1,4 +1,16 @@
+> The stored-thumbnail and signed-delivery implementation has newer checks in [image delivery verification](image-delivery-verification.md). The initial scaffold results below remain historical.
+
 # Verification — 2026-09-26
+
+## Infinite scroll follow-up — 2026-09-26
+
+The catalogue now adapts the infinite-loading pattern in `~/github/me/components/photos/PhotosGallery.tsx`: a server-rendered first page of 24, an 800px IntersectionObserver margin, cursor-based loading, a manual Load more/Retry control, ID deduplication, and cancellation on filter changes. Category order and private owner authorization are preserved. Existing `/api/items` calls without pagination parameters still return the full listing.
+
+- Node 24: `npm run typecheck`, `npm run lint`, and `npm run build` passed. Typecheck was rerun after the build because running both simultaneously initially raced Next.js's generated type files.
+- `PATH="$PWD/.venv/bin:/opt/homebrew/opt/node@24/bin:$PATH" WARDROBE_TEST_PYTHON="$PWD/.venv/bin/python" npm test`: 60 TypeScript tests and 6 Python tests passed. New tests cover category boundaries, equal timestamps, deleted items, malformed/filter-mismatched cursors, authorization, concurrent loads, deduplication, retries, unavailable observers, and aborted requests.
+- Read-only real MongoDB checks paged all 15 currently active records in batches of two and separately paged all six clothing filters. Results matched the complete listing in category/newest order with no omissions or duplicates. No records or indexes were changed.
+- An isolated headless Chrome harness rendered the actual `WardrobeGrid` with synthetic records and replacements for Next.js image/link components. On 390×844 and 1000×600 viewports, native IntersectionObserver loaded 24 → 48 → 49 cards with exactly two requests, removed the loading control at exhaustion, and produced no duplicate cards, horizontal overflow, or page errors. Screenshots were visually inspected at ignored `test-results/infinite-scroll-phone.png` and `test-results/infinite-scroll-desktop.png`. This verifies browser scrolling separately from live owner authentication and image delivery; the authenticated live E2E suite was not run for this change.
+- The category pagination index is included in `scripts/setup-indexes.ts`; run `npm run wardrobe:indexes` when applying the change to a configured environment.
 
 The implementation is complete and integrated. The private live workflow is **not yet verified**: no service credentials, real OAuth owner session, or garment photographs were supplied. Deployment was not requested.
 

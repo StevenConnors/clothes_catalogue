@@ -1,10 +1,11 @@
-import Image from "next/image";
+import { toDeliveryItems } from "@/lib/storage/delivery";
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { CLOTHING_LABELS, CLOTHING_TYPES, ClothingTypeSchema } from "@/lib/contracts/wardrobe";
+import { CLOTHING_TYPES, ClothingTypeSchema, ITEM_PAGE_SIZE } from "@/lib/contracts/wardrobe";
 import { requireOwner, AuthorizationError } from "@/lib/authorization";
-import { getWardrobeRepository, toItemDTO } from "@/lib/data/wardrobe-repository";
+import { getWardrobeRepository, listActiveItemsPage } from "@/lib/data/wardrobe-repository";
 import { TypeFilters, WardrobeHeader } from "@/components/wardrobe/wardrobe-controls";
+import { WardrobeGrid } from "@/components/wardrobe/wardrobe-grid";
 
 type PageProps = { searchParams: Promise<{ type?: string | string[] }> };
 
@@ -13,12 +14,12 @@ export default async function WardrobePage({ searchParams }: PageProps) {
   const rawType = Array.isArray(query.type) ? query.type[0] : query.type;
   const parsedType = rawType ? ClothingTypeSchema.safeParse(rawType) : null;
   const selected = parsedType?.success ? parsedType.data : undefined;
-  let documents;
+  let page;
   let counts;
   try {
     await requireOwner();
     const repository = await getWardrobeRepository();
-    [documents, counts] = await Promise.all([repository.listActive(selected), repository.countActiveByType()]);
+    [page, counts] = await Promise.all([listActiveItemsPage({ type: selected, limit: ITEM_PAGE_SIZE }), repository.countActiveByType()]);
   } catch (error) {
     if (error instanceof AuthorizationError) {
       if (error.status === 401) redirect("/sign-in");
@@ -28,16 +29,13 @@ export default async function WardrobePage({ searchParams }: PageProps) {
   }
 
   const total = CLOTHING_TYPES.reduce((sum, type) => sum + counts[type], 0);
-  const items = documents.map(toItemDTO).sort((a, b) =>
-    CLOTHING_TYPES.indexOf(a.type) - CLOTHING_TYPES.indexOf(b.type)
-  );
+  const items = await toDeliveryItems(page.documents);
+  const gridKey = JSON.stringify([selected ?? null, page.nextCursor, items.map(item => [item.id, item.updatedAt])]);
   return <main className="page-shell">
     <WardrobeHeader total={total} />
     <section className="catalogue-heading"><div><p className="eyebrow">YOUR COLLECTION</p><h1>Wardrobe</h1></div></section>
     <TypeFilters selected={selected} counts={counts} total={total} />
     {items.length === 0 ? <section className="empty-state"><div className="empty-mark">W</div><h2>{total === 0 ? "Your wardrobe is ready" : "No items in this category"}</h2><p>{total === 0 ? "Your catalogue will appear here once your first batch is imported." : "Try another clothing type to see more of your wardrobe."}</p>{total > 0 && <Link className="text-link" href="/">View all items</Link>}</section> :
-      <section className="item-grid" aria-label="Wardrobe items">{items.map((item, index) => <Link key={item.id} href={`/items/${item.id}`} className="item-card" aria-label={`View ${CLOTHING_LABELS[item.type]}`}>
-        <div className="card-image"><Image src={`${item.images.cutout}&size=thumbnail`} alt={CLOTHING_LABELS[item.type]} width={640} height={640} unoptimized loading={index < 2 ? "eager" : "lazy"} fetchPriority={index === 0 ? "high" : "auto"} className="garment-image" /></div>
-      </Link>)}</section>}
+      <WardrobeGrid key={gridKey} initialItems={items} initialCursor={page.nextCursor} type={selected} />}
   </main>;
 }

@@ -1,0 +1,117 @@
+{
+  "recordedAt": "2026-09-26T14:47:07.723Z",
+  "url": "https://www.stuff.yujitanaka.com/",
+  "method": "Read from Chrome console Resource Timing after trace, values rounded to ms; order is resource completion order, not grid order. Browser interaction/visibility not controlled.",
+  "viewport": {
+    "width": 1309,
+    "height": 992,
+    "dpr": 2
+  },
+  "rows": [
+    {
+      "sample": 1,
+      "startMs": 552,
+      "waitMs": 585,
+      "downloadMs": 157,
+      "bodyBytes": 42900
+    },
+    {
+      "sample": 2,
+      "startMs": 552,
+      "waitMs": 548,
+      "downloadMs": 156,
+      "bodyBytes": 28252
+    },
+    {
+      "sample": 3,
+      "startMs": 8307,
+      "waitMs": 3119,
+      "downloadMs": 290,
+      "bodyBytes": 42990
+    },
+    {
+      "sample": 4,
+      "startMs": 8307,
+      "waitMs": 622,
+      "downloadMs": 299,
+      "bodyBytes": 48558
+    },
+    {
+      "sample": 5,
+      "startMs": 8307,
+      "waitMs": 3169,
+      "downloadMs": 156,
+      "bodyBytes": 28260
+    },
+    {
+      "sample": 6,
+      "startMs": 8307,
+      "waitMs": 3182,
+      "downloadMs": 152,
+      "bodyBytes": 30802
+    },
+    {
+      "sample": 7,
+      "startMs": 8307,
+      "waitMs": 637,
+      "downloadMs": 309,
+      "bodyBytes": 84558
+    },
+    {
+      "sample": 8,
+      "startMs": 8307,
+      "waitMs": 3255,
+      "downloadMs": 298,
+      "bodyBytes": 48848
+    },
+    {
+      "sample": 9,
+      "startMs": 8307,
+      "waitMs": 570,
+      "downloadMs": 157,
+      "bodyBytes": 58156
+    },
+    {
+      "sample": 10,
+      "startMs": 8307,
+      "waitMs": 569,
+      "downloadMs": 306,
+      "bodyBytes": 61542
+    },
+    {
+      "sample": 11,
+      "startMs": 8307,
+      "waitMs": 3119,
+      "downloadMs": 289,
+      "bodyBytes": 49292
+    },
+    {
+      "sample": 12,
+      "startMs": 8307,
+      "waitMs": 3220,
+      "downloadMs": 293,
+      "bodyBytes": 45452
+    },
+    {
+      "sample": 13,
+      "startMs": 8307,
+      "waitMs": 3270,
+      "downloadMs": 311,
+      "bodyBytes": 54028
+    },
+    {
+      "sample": 14,
+      "startMs": 8307,
+      "waitMs": 3286,
+      "downloadMs": 300,
+      "bodyBytes": 56416
+    },
+    {
+      "sample": 15,
+      "startMs": 8307,
+      "waitMs": 3329,
+      "downloadMs": 314,
+      "bodyBytes": 52048
+    }
+  ]
+}
