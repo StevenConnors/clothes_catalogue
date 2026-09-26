@@ -1,0 +1,4 @@
+# Python 3.12; use a native ARM64 interpreter on Apple Silicon.
+Pillow==11.3.0
+rembg[cpu]==2.0.67
+onnxruntime==1.29.0
