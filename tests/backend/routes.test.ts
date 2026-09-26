@@ -7,6 +7,7 @@ const { authMock, repoMock, storeMock, pageMock } = vi.hoisted(() => ({
   storeMock: { readPrivate: vi.fn() },
   pageMock: vi.fn(),
 }));
+vi.mock("@/lib/storage/delivery", () => ({ toDeliveryItems: async (documents: WardrobeDocument[]) => documents.map(x => ({ id: x._id, type: x.type, images: { cutout: `/api/items/${x._id}/image?variant=cutout`, original: `/api/items/${x._id}/image?variant=original` }, createdAt: x.createdAt.toISOString(), updatedAt: x.updatedAt.toISOString() })) }));
 vi.mock("@/lib/auth", () => ({ auth: authMock }));
 vi.mock("@/lib/data/wardrobe-repository", () => ({
   getWardrobeRepository: () => repoMock,

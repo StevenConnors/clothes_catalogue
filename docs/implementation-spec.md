@@ -1,3 +1,5 @@
+> Image delivery update (2026-09-27): The owner approved direct, two-minute signed GET URLs for private Blob images and stored WebP thumbnails. This supersedes the original same-origin-only DTO/image guidance below. Owner checks still gate catalogue/detail/refresh responses, removed items receive no new URLs, and already issued URLs can remain usable until expiry. See README's “Private image delivery” section for processing, backfill, caching, and rollback commands. No signing key or broad delegation credential is returned to clients.
+
 # Implementation prompt: personal wardrobe catalogue
 
 Paste the entire file into the coordinating Codex agent in the repository where you want the app built, with your chosen GPT-6 coordinator set to Medium reasoning. This is an instruction to implement the app in that repository. It includes the shared contracts, three bounded subagent assignments, and a separate prompt for processing future photo batches.

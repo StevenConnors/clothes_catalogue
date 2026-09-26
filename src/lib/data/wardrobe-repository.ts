@@ -92,3 +92,14 @@ export function getWardrobeRepository(): WardrobeRepository {
     },
   };
 }
+
+export async function getActiveItemsByIds(ids: string[]): Promise<WardrobeDocument[]> {
+  return (await getDatabase()).collection<WardrobeDocument>("wardrobe_items").find({ _id: { $in: ids }, deletedAt: null }).toArray();
+}
+
+export async function attachThumbnails(id: string, cutoutPath: string, thumbnails: NonNullable<WardrobeDocument["images"]["thumbnails"]>): Promise<boolean> {
+  const result = await (await getDatabase()).collection<WardrobeDocument>("wardrobe_items").updateOne(
+    { _id: id, deletedAt: null, "images.cutout.pathname": cutoutPath }, { $set: { "images.thumbnails": thumbnails } },
+  );
+  return result.matchedCount === 1;
+}

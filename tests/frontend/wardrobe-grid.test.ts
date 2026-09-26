@@ -5,6 +5,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { WardrobeGrid } from "@/components/wardrobe/wardrobe-grid";
 import type { ItemDTO } from "@/lib/contracts/wardrobe";
 
+vi.mock("@/components/wardrobe/private-image", () => ({ PrivateImage: ({ alt }: { alt: string }) => createElement("img", { alt }) }));
 vi.mock("next/link", () => ({ default: ({ children, ...props }: ComponentProps<"a">) => createElement("a", props, children) }));
 vi.mock("next/image", () => ({ default: (props: ComponentProps<"img"> & { unoptimized?: boolean }) => {
   const imageProps = { ...props };

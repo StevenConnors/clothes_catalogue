@@ -30,7 +30,7 @@ async function fixture() {
     async updateType() { return null; }, async softDelete() { return false; },
   };
   const imageStore: ImageStore = {
-    async putPrivate(name, bytes) { writes.push(name); const digest = hash(bytes); const old = objects.get(name); if (old && old !== digest) throw new Error("immutable path content conflict"); objects.set(name, digest); return { pathname: name, contentType: name.endsWith(".png") ? "image/png" : "image/jpeg" }; },
+    async putPrivate(name, bytes, contentType) { writes.push(name); const digest = hash(bytes); const old = objects.get(name); if (old && old !== digest) throw new Error("immutable path content conflict"); objects.set(name, digest); return { pathname: name, contentType }; },
     async readPrivate() { return null; },
   };
   return { root, source, cutout, repository, imageStore, docs, writes, objects, setFail: (v: boolean) => { failInsert = v; } };
@@ -58,11 +58,11 @@ describe("importBatch", () => {
   it("resumes after upload then document insert failure and reuses content paths", async () => {
     const f = await fixture(); f.setFail(true);
     let result = await importBatch({ batch: "demo", root: f.root }, { repository: f.repository, imageStore: f.imageStore });
-    expect(result.report.failed).toHaveLength(1); expect(f.docs.size).toBe(0); expect(f.writes).toHaveLength(2);
-    expect(f.objects.size).toBe(2); expect(result.unreferencedObjects).toHaveLength(2);
+    expect(result.report.failed).toHaveLength(1); expect(f.docs.size).toBe(0); expect(f.writes).toHaveLength(3);
+    expect(f.objects.size).toBe(3); expect(result.unreferencedObjects).toHaveLength(3);
     f.setFail(false); result = await importBatch({ batch: "demo", root: f.root }, { repository: f.repository, imageStore: f.imageStore });
-    expect(result.report.imported).toHaveLength(1); expect(f.docs.size).toBe(1); expect(f.writes).toHaveLength(4);
-    expect(f.objects.size).toBe(2); expect(result.unreferencedObjects).toHaveLength(0);
+    expect(result.report.imported).toHaveLength(1); expect(f.docs.size).toBe(1); expect(f.writes).toHaveLength(6);
+    expect(f.objects.size).toBe(3); expect(result.unreferencedObjects).toHaveLength(0);
   });
   it("rejects a changed cutout digest without uploading", async () => {
     const f = await fixture(); const p = path.join(f.root, "wardrobe-data/processed/demo/cutout.png"); await fs.writeFile(p, Buffer.from("tampered"));

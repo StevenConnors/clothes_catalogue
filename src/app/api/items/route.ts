@@ -1,8 +1,9 @@
+import { toDeliveryItems } from "@/lib/storage/delivery";
 import { NextResponse } from "next/server";
 export const runtime = "nodejs";
 import { CLOTHING_TYPES, ClothingTypeSchema, ListItemsPageRequestSchema, ListItemsPageResponseSchema, ListItemsResponseSchema } from "@/lib/contracts/wardrobe";
 import { requireOwner } from "@/lib/authorization";
-import { getWardrobeRepository, listActiveItemsPage, toItemDTO } from "@/lib/data/wardrobe-repository";
+import { getWardrobeRepository, listActiveItemsPage } from "@/lib/data/wardrobe-repository";
 import { decodeItemCursor, InvalidItemCursorError } from "@/lib/data/item-cursor";
 import { apiError, errorResponse, privateHeaders } from "@/lib/api";
 
@@ -25,13 +26,13 @@ export async function GET(request: Request) {
       const [page, counts] = await Promise.all([listActiveItemsPage(options.data), repository.countActiveByType()]);
       const total = options.data.type ? counts[options.data.type] : CLOTHING_TYPES.reduce((sum, type) => sum + counts[type], 0);
       return NextResponse.json(ListItemsPageResponseSchema.parse({
-        items: page.documents.map(toItemDTO), nextCursor: page.nextCursor, total, counts,
+        items: await toDeliveryItems(page.documents), nextCursor: page.nextCursor, total, counts,
       }), { headers: privateHeaders });
     }
     const [documents, counts] = await Promise.all([
       repository.listActive(parsed?.success ? parsed.data : undefined), repository.countActiveByType(),
     ]);
-    const payload = { items: documents.map(toItemDTO), total: documents.length, counts };
+    const payload = { items: await toDeliveryItems(documents), total: documents.length, counts };
     return NextResponse.json(ListItemsResponseSchema.parse(payload), { headers: privateHeaders });
   } catch (error) {
     if (error instanceof InvalidItemCursorError) return errorResponse("INVALID_REQUEST", error.message, 400);

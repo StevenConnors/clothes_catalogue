@@ -41,7 +41,7 @@ export function getImageStore(): ImageStore {
       try {
         const blob = await put(pathname, Buffer.from(bytes), {
           access: "private", addRandomSuffix: false, allowOverwrite: false, contentType,
-          cacheControlMaxAge: 60,
+          cacheControlMaxAge: 30 * 24 * 60 * 60,
         });
         return { pathname: blob.pathname, contentType };
       } catch (putError) {

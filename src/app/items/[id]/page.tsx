@@ -1,9 +1,10 @@
+import { toDeliveryItems } from "@/lib/storage/delivery";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import type { WardrobeDocument, ItemCounts } from "@/lib/contracts/persistence";
 import { ItemIdSchema } from "@/lib/contracts/wardrobe";
 import { AuthorizationError, requireOwner } from "@/lib/authorization";
-import { getWardrobeRepository, toItemDTO } from "@/lib/data/wardrobe-repository";
+import { getWardrobeRepository } from "@/lib/data/wardrobe-repository";
 import { BackToWardrobe, ItemActions } from "@/components/wardrobe/item-actions";
 import { WardrobeHeader } from "@/components/wardrobe/wardrobe-controls";
 
@@ -25,5 +26,5 @@ export default async function ItemPage({ params }: { params: Promise<{ id: strin
   }
   if (!document) notFound();
   const total = Object.values(counts).reduce((sum, value) => sum + value, 0);
-  return <main className="page-shell"><WardrobeHeader total={total} /><div className="detail-back"><BackToWardrobe /></div><section className="detail-layout"><ItemActions item={toItemDTO(document)} /></section></main>;
+  return <main className="page-shell"><WardrobeHeader total={total} /><div className="detail-back"><BackToWardrobe /></div><section className="detail-layout"><ItemActions item={(await toDeliveryItems([document]))[0]} /></section></main>;
 }

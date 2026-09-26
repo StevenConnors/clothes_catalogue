@@ -1,8 +1,9 @@
+import { toDeliveryItems } from "@/lib/storage/delivery";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { CLOTHING_TYPES, ClothingTypeSchema, ITEM_PAGE_SIZE } from "@/lib/contracts/wardrobe";
 import { requireOwner, AuthorizationError } from "@/lib/authorization";
-import { getWardrobeRepository, listActiveItemsPage, toItemDTO } from "@/lib/data/wardrobe-repository";
+import { getWardrobeRepository, listActiveItemsPage } from "@/lib/data/wardrobe-repository";
 import { TypeFilters, WardrobeHeader } from "@/components/wardrobe/wardrobe-controls";
 import { WardrobeGrid } from "@/components/wardrobe/wardrobe-grid";
 
@@ -28,7 +29,7 @@ export default async function WardrobePage({ searchParams }: PageProps) {
   }
 
   const total = CLOTHING_TYPES.reduce((sum, type) => sum + counts[type], 0);
-  const items = page.documents.map(toItemDTO);
+  const items = await toDeliveryItems(page.documents);
   const gridKey = JSON.stringify([selected ?? null, page.nextCursor, items.map(item => [item.id, item.updatedAt])]);
   return <main className="page-shell">
     <WardrobeHeader total={total} />

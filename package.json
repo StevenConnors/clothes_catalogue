@@ -11,7 +11,11 @@
     "test:e2e": "playwright test",
     "wardrobe:indexes": "tsx scripts/setup-indexes.ts",
     "wardrobe:import": "tsx scripts/import-batch.ts",
-    "wardrobe:approve": "tsx scripts/approve-batch.ts"
+    "wardrobe:approve": "tsx scripts/approve-batch.ts",
+    "wardrobe:prepare": "tsx scripts/prepare-batch.ts",
+    "wardrobe:thumbnails": "tsx scripts/prepare-thumbnails.ts",
+    "wardrobe:backfill-thumbnails": "tsx scripts/backfill-thumbnails.ts",
+    "wardrobe:check-delivery": "tsx scripts/check-image-delivery.ts"
   },
   "dependencies": {
     "@vercel/blob": "2.8.0",

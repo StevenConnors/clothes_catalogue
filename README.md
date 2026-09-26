@@ -48,3 +48,22 @@ npm run wardrobe:import -- --batch first-batch
 ```
 
 Import includes only approved entries. Service configuration and recovery instructions are in [setup](docs/setup.md).
+
+## Private image delivery
+
+Grid images are stored WebP thumbnails (320, 480, and 640 pixels) fetched directly from private Blob using two-minute signed GET URLs. The server checks owner access before issuing URLs and batches refreshes for delayed images. Already downloaded images can remain in browser cache after expiry. New immutable uploads have a 30-day Blob cache lifetime.
+
+Use `npm run wardrobe:prepare -- --batch <batch-id>` to run the existing local Python segmentation followed by Sharp thumbnail preparation. `WARDROBE_PYTHON` selects Python; otherwise the wrapper uses `.venv/bin/python` when available. To generate only thumbnails for an existing processed batch, run `npm run wardrobe:thumbnails -- --batch <batch-id>`. The generated `thumbnails.json` and WebPs are separate from the approval manifest. Import generates the same derivatives from the validated, approved cutout; existing manifests still work without reprocessing or reapproval.
+
+For an existing catalogue:
+
+```sh
+npm run wardrobe:check-delivery
+npm run wardrobe:backfill-thumbnails -- --dry-run
+npm run wardrobe:backfill-thumbnails
+npm run wardrobe:check-delivery
+```
+
+Backfill preserves item IDs, type, approval/source records and timestamps. It attaches derivatives only if the item is still active and its cutout path has not changed. It is resumable and writes `wardrobe-data/thumbnail-backfill-report.json`, including failed items and unreferenced objects. Originals and approved PNGs remain stored. Files use output hashes and a transformation version in their paths; replacements get new paths instead of overwriting cached bytes.
+
+Deploy after backfill so the grid starts with stored derivatives. Set `WARDROBE_IMAGE_DELIVERY=proxy` to use the original authenticated image endpoints during rollback. Signed URL and signing material responses must never be publicly cached or logged. The signing material stays on the server; only individual GET URLs are sent to the browser.

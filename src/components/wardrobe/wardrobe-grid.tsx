@@ -1,6 +1,6 @@
 "use client";
 
-import Image from "next/image";
+import { PrivateImage } from "./private-image";
 import Link from "next/link";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { CLOTHING_LABELS, ITEM_PAGE_SIZE, ListItemsPageResponseSchema, type ClothingType, type ItemDTO } from "@/lib/contracts/wardrobe";
@@ -71,7 +71,7 @@ export function WardrobeGrid({ initialItems, initialCursor, type }: {
   return <>
     <section className="item-grid" aria-label="Wardrobe items" aria-busy={loadState === "loading"}>
       {items.map((item, index) => <Link key={item.id} href={`/items/${item.id}`} className="item-card" aria-label={`View ${CLOTHING_LABELS[item.type]}`}>
-        <div className="card-image"><Image src={`${item.images.cutout}&size=thumbnail`} alt={CLOTHING_LABELS[item.type]} width={640} height={640} unoptimized loading={index < 2 ? "eager" : "lazy"} fetchPriority={index === 0 ? "high" : "auto"} className="garment-image" /></div>
+        <div className="card-image"><PrivateImage item={item} thumbnail alt={CLOTHING_LABELS[item.type]} eager={index < 2} highPriority={index === 0} /></div>
       </Link>)}
     </section>
     {nextCursor ? <div className="catalogue-loader" ref={sentinelRef}>

@@ -38,10 +38,10 @@ module.atomic_json(output/'manifest.json',dict(schemaVersion=1,batchId='fixture'
 `,root,resolve('scripts/prepare-batch.py')]);
    const dry=await importBatch({root,batch:'fixture',dryRun:true},{repository,imageStore});
    expect(dry.planned).toHaveLength(2);expect(dry.report.imported).toHaveLength(0);expect(rows).toHaveLength(0);expect(blobs.size).toBe(0);
-   const live=await importBatch({root,batch:'fixture'},{repository,imageStore});expect(live.report.imported).toHaveLength(2);expect(blobs.size).toBe(4);
+   const live=await importBatch({root,batch:'fixture'},{repository,imageStore});expect(live.report.imported).toHaveLength(2);expect(blobs.size).toBe(10);
    const original=await readFile(join(root,'wardrobe-data/incoming/fixture/0.png'));expect(Buffer.from(blobs.get(rows[0].images.original.pathname)!)).toEqual(original);
    await repository.updateType(rows[0]._id,'outer');await repository.softDelete(rows[1]._id);
-   const retry=await importBatch({root,batch:'fixture'},{repository,imageStore});expect(retry.report.imported).toHaveLength(0);expect(retry.report.skipped.map(s=>s.reason)).toEqual(['already_exists','previously_removed','not_approved']);expect(rows[0].type).toBe('outer');expect(rows).toHaveLength(2);expect(blobs.size).toBe(4);
+   const retry=await importBatch({root,batch:'fixture'},{repository,imageStore});expect(retry.report.imported).toHaveLength(0);expect(retry.report.skipped.map(s=>s.reason)).toEqual(['already_exists','previously_removed','not_approved']);expect(rows[0].type).toBe('outer');expect(rows).toHaveLength(2);expect(blobs.size).toBe(10);
   }finally{await rm(root,{recursive:true,force:true});}
  });
 });

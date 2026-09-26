@@ -1,3 +1,5 @@
+> The stored-thumbnail and signed-delivery implementation has newer checks in [image delivery verification](image-delivery-verification.md). The initial scaffold results below remain historical.
+
 # Verification — 2026-09-26
 
 ## Infinite scroll follow-up — 2026-09-26

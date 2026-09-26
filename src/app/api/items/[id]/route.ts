@@ -1,8 +1,9 @@
+import { toDeliveryItems } from "@/lib/storage/delivery";
 import { NextResponse } from "next/server";
 export const runtime = "nodejs";
 import { ItemIdSchema, UpdateItemRequestSchema, UpdateItemResponseSchema, GetItemResponseSchema } from "@/lib/contracts/wardrobe";
 import { requireOwner } from "@/lib/authorization";
-import { getWardrobeRepository, toItemDTO } from "@/lib/data/wardrobe-repository";
+import { getWardrobeRepository } from "@/lib/data/wardrobe-repository";
 import { apiError, errorResponse, privateHeaders, validMutationOrigin } from "@/lib/api";
 
 type Context = { params: Promise<{ id: string }> };
@@ -13,7 +14,7 @@ export async function GET(_request: Request, context: Context) {
     if (!ItemIdSchema.safeParse(id).success) return errorResponse("INVALID_REQUEST", "Invalid item ID.", 400);
     const item = await getWardrobeRepository().getActiveById(id);
     if (!item) return errorResponse("NOT_FOUND", "Item not found.", 404);
-    return NextResponse.json(GetItemResponseSchema.parse({ item: toItemDTO(item) }), { headers: privateHeaders });
+    return NextResponse.json(GetItemResponseSchema.parse({ item: (await toDeliveryItems([item]))[0] }), { headers: privateHeaders });
   } catch (error) { return apiError(error); }
 }
 export async function PATCH(request: Request, context: Context) {
@@ -28,7 +29,7 @@ export async function PATCH(request: Request, context: Context) {
     if (!input.success) return errorResponse("INVALID_REQUEST", "Expected exactly one valid clothing type.", 400);
     const item = await getWardrobeRepository().updateType(id, input.data.type);
     if (!item) return errorResponse("NOT_FOUND", "Item not found.", 404);
-    return NextResponse.json(UpdateItemResponseSchema.parse({ item: toItemDTO(item) }), { headers: privateHeaders });
+    return NextResponse.json(UpdateItemResponseSchema.parse({ item: (await toDeliveryItems([item]))[0] }), { headers: privateHeaders });
   } catch (error) { return apiError(error); }
 }
 export async function DELETE(request: Request, context: Context) {
