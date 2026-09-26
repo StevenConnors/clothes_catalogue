@@ -23,7 +23,7 @@ python3.12 -m venv .venv
 
 If Python 3.12 is missing, install a native build using your Python manager. For example `uv python install 3.12` followed by `uv venv --python 3.12 .venv`. rembg uses CPU inference and explicitly selects birefnet-general. Initial session creation downloads model weights into the local cache; later runs reuse them. The model runs locally, with one reused session and exactly one photograph in flight. No GPU/Core ML setup is required. First-time download can take time and is included in measured initialization.
 
-Photograph garments individually, laid flat or hanging against a simple background. Export HEIC to JPEG first. Keep JPEG/PNG originals in `wardrobe-data/incoming/<batch-id>/`; batch IDs use letters, digits, underscores, and hyphens. All wardrobe-data, reports, review sheets, sessions, and environment files are Git ignored. Never put photos in public assets or commit them.
+Photograph garments individually, preferably laid flat against a plain contrasting background with no hanger or rack. See [photo quality](photo-quality.md) for the evaluated limitations. Export HEIC to JPEG first. Keep JPEG/PNG originals in `wardrobe-data/incoming/<batch-id>/`; batch IDs use letters, digits, underscores, and hyphens. All wardrobe-data, reports, review sheets, sessions, and environment files are Git ignored. Never put photos in public assets or commit them.
 
 ```sh
 mkdir -p wardrobe-data/incoming/first-batch
@@ -39,12 +39,16 @@ Use [the reusable Codex prompt](codex-photo-workflow.md) for visual classificati
 ```sh
 .venv/bin/python scripts/prepare-batch.py --batch first-batch
 .venv/bin/python scripts/review-sheet.py --batch first-batch
+npm run wardrobe:approve -- --batch first-batch --all --dry-run
+npm run wardrobe:approve -- --batch first-batch --all
+# If you explicitly accept recorded warnings as-is, add --accept-warnings.
+.venv/bin/python scripts/review-sheet.py --batch first-batch
 npm run wardrobe:import -- --batch first-batch --dry-run
 # After reviewed entries are approved and dry-run validation succeeds:
 npm run wardrobe:import -- --batch first-batch
 ```
 
-Dry-run checks paths, decoded files, hashes, review state, and existing records without writing to Blob/MongoDB. Its plan lists intended inserts separately; imported stays empty until real inserts succeed. Exact source-byte duplicates are skipped; different photos of the same garment are not detected as duplicates. Review state is local and is not a website feature.
+Dry-run checks paths, decoded files, hashes, review state, and existing records without writing to Blob/MongoDB. Its plan lists intended inserts separately; imported stays empty until real inserts succeed. Exact source-byte duplicates are skipped; different photos of the same garment are not detected as duplicates. Review state is local and is not a website feature. `wardrobe:approve` requires exactly one of `--all` or `--items 1,3-5`; `--all --except 2,6` excludes numbered entries. Numbers come from the current review sheets. The command checks image bytes and the review-index digest mapping, requires a clothing type, refuses rejected entries, and requires `--accept-warnings` for flagged results. If any selected entry fails, none are approved. Repeating approval is safe. Approval alone does not import records.
 
 ## Recovery
 
@@ -55,7 +59,7 @@ Failed masks remain pending/rejected with diagnostics. Preserve originals, impro
 .venv/bin/python scripts/review-sheet.py --batch first-batch
 ```
 
-Reprocessing retains the type but resets approval. Review again before approving. Changed source bytes create a new pending entry. Do not edit approved cutouts by hand: digest mismatches block import. A changed cutout gets a new content-addressed Blob pathname after review.
+Reprocessing retains the type but resets approval. Review again before approving. Changed source bytes create a new pending entry. Do not edit approved cutouts by hand: digest mismatches block import. For an item not yet imported, a changed cutout gets a new content-addressed Blob pathname after review. Already imported source hashes are skipped; reprocessing and importing again does not replace the current catalogue image.
 
 If import partially fails, inspect the ignored import-report.json, fix the reported cause, repeat dry-run then import. Successful records are retained/skipped, immutable uploaded files are verified/reused, and no incomplete document is inserted. Unreferenced uploaded files are identified for inspection; there is no broad deletion. Existing manual type corrections remain intact. Missing paths, paths outside the batch, and symlinks escaping it are rejected.
 
@@ -82,4 +86,4 @@ Deployment was not requested. Code and environment templates are ready for the o
 
 Official references: [Next.js installation](https://nextjs.org/docs/app/getting-started/installation), [Auth.js GitHub](https://authjs.dev/getting-started/providers/github), [restricting access](https://authjs.dev/guides/restricting-user-access), [Blob SDK/authentication](https://vercel.com/docs/vercel-blob/using-blob-sdk), [MongoDB Node driver](https://www.mongodb.com/docs/drivers/node/current/), [rembg](https://github.com/danielgatis/rembg), [ONNX wheels](https://pypi.org/project/onnxruntime/#files).
 
-Implementation-session Python note: a working `.venv` was created with native Python 3.12.12 stored under `/private/tmp/wardrobe-python/`. This temporary base may be removed by the OS. Recreate `.venv` with a persistent installed Python 3.12 before long-term use. No model weights were downloaded and no real-photo segmentation was run.
+Implementation-session Python note: a working `.venv` was created with native Python 3.12.12 stored under `/private/tmp/wardrobe-python/`. This temporary base may be removed by the OS. Recreate `.venv` with a persistent installed Python 3.12 before long-term use. The initial implementation did not download model weights. Subsequently, six real first-batch photos were processed and imported; see docs/verification.md for measurements and remaining mask-quality warnings.

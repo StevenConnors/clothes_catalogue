@@ -13,3 +13,5 @@ npm run dev
 ```
 
 `npm run typecheck`, `npm run lint`, `npm test`, and `npm run build` check implementation. `npm run test:e2e` requires a separate live test instance and real owner session; it fails clearly when prerequisites are absent.
+
+After inspecting a classified batch’s review sheets, approve it with `npm run wardrobe:approve -- --batch first-batch --all` (or `--items 1,3-5`). Add `--accept-warnings` only to accept flagged cutouts as-is. Then run the import dry-run and import commands in [setup](docs/setup.md). [Photo quality](docs/photo-quality.md) explains hanger/rack remnants and capture improvements.

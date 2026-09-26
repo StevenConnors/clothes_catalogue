@@ -10,7 +10,8 @@
     "test": "vitest run && python3 -m unittest discover -s tests/pipeline -p \"test_*.py\"",
     "test:e2e": "playwright test",
     "wardrobe:indexes": "tsx scripts/setup-indexes.ts",
-    "wardrobe:import": "tsx scripts/import-batch.ts"
+    "wardrobe:import": "tsx scripts/import-batch.ts",
+    "wardrobe:approve": "tsx scripts/approve-batch.ts"
   },
   "dependencies": {
     "@vercel/blob": "2.8.0",

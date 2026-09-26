@@ -66,3 +66,23 @@ Actual anonymous HTTP requests to `/api/items`, item detail JSON, original image
 5. Run `npm run test:e2e` with the real owner session and dedicated environment. Store session/screenshots locally in ignored paths.
 
 Three implementation agents were requested with `gpt-6-luna`, Medium reasoning, and no inherited history. Spawn results supplied task IDs but no resolved-model metadata; actual model selection could not be independently verified. Their returned work was reviewed, corrected and integrated by the coordinator. No recursive delegation occurred.
+
+## Live first-batch follow-up — 2026-09-26
+
+This update supersedes the missing-input statements above for the first-batch import. The owner supplied service configuration and six real photographs. All six source/cutout pairs were visually inspected: one jacket/outer and five pants. Garments remain recognizable, but all cutouts retain hanger/exercise-rack parts; these findings were recorded in the local manifest. The owner explicitly approved importing all six as-is. Only those exact reviewed entries were marked approved after rechecking source/cutout digests.
+
+- `npm run wardrobe:indexes`: passed against configured MongoDB.
+- `npm run wardrobe:import -- --batch first-batch --dry-run`: six planned inserts, zero skips/failures.
+- `npm run wardrobe:import -- --batch first-batch`: six imported, zero skips/failures.
+- Read-only real-adapter verification: six active records, twelve private stored images read with digests matching unchanged sources/reviewed cutouts. Active counts: one outer, five pants, total six. Evidence: ignored `wardrobe-data/verification/first-batch-live-check.json` and batch import report.
+- The owner's real three-photo benchmark reports ARM64 Python 3.12.12, 181.77 seconds session initialization including the first model download, per-image durations 16.35/16.05/14.83 seconds, and peak process RSS 6,150,684,672 bytes (about 5.73 GiB). All three attempts report success. These are recorded measurements, not estimates; the coordinator did not independently verify CPU model/physical memory.
+
+The live MongoDB/private Blob import and private SDK reads now pass. Signed-in website rendering, authenticated HTTP image responses, UI correction/removal flows, and disposable E2E checks remain pending browser verification. Deployment remains not requested. Real-photo quality has been reviewed with the retained-background limitation explicitly accepted by the owner; the app does not promise these cutouts are clean.
+
+## Batch approval CLI and mask-quality follow-up (2026-09-26)
+
+Added `wardrobe:approve` for whole batches, exclusions, and numbered selections. Approval validates review-index hashes, source/cutout bytes, decoded images, clothing type, warnings, and rejection state before atomically updating the local manifest. Dry-run and repeated approval do not change bytes; a failed selected entry prevents all selected approvals. Approval performs no MongoDB/Blob operations.
+
+Validation passed: 31 Vitest tests, 6 Python tests, typecheck, and lint. New tests cover approval selection, exclusions, warning acceptance, rejected/unclassified entries, stale mappings, changed bytes, symlink rejection, dry-run, idempotence, and pending → approval → importer integration using fixture adapters. Actual CLI help and first-batch approval dry-run passed: all six entries already approved, no manifest changes. No new live records or catalogue images were written during this update.
+
+A separate real-photo crop trial on review entry 5 used cached BiRefNet CPU weights: 6.00 seconds initialization and 17.82 seconds processing. Visual inspection found less rack but remaining clips/handle/rod; it is not a fully clean result. The candidate stays in ignored local experiment files. See photo-quality.md for the capture recommendations, proposed prompted-segmentation trial, and existing-import replacement limitation.

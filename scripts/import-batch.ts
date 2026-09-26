@@ -1,9 +1,10 @@
+import { loadBatch, validatePreparedEntry } from "./lib/batch-files";
 import { config } from "dotenv";
-import { createHash, randomUUID } from "node:crypto";
+import { randomUUID } from "node:crypto";
 import { promises as fs } from "node:fs";
 import path from "node:path";
-import sharp from "sharp";
-import { BatchManifestSchema, ImportReportSchema, type BatchManifest, type ImportReport } from "../src/lib/contracts/batch";
+import { ImportReportSchema, type ImportReport } from "../src/lib/contracts/batch";
+import type { ClothingType } from "../src/lib/contracts/wardrobe";
 import type { ImageStore, WardrobeDocument, WardrobeRepository } from "../src/lib/contracts/persistence";
 
 export interface ImportAdapters {
@@ -13,60 +14,14 @@ export interface ImportAdapters {
 }
 export interface ImportOptions { batch: string; dryRun?: boolean; root?: string; }
 
-const sha = (bytes: Uint8Array) => createHash("sha256").update(bytes).digest("hex");
 const validBatch = (s: string) => /^[A-Za-z0-9_-]+$/.test(s);
-function inside(base: string, relative: string): string {
-  if (!relative || path.isAbsolute(relative)) throw new Error("path must be relative to its batch folder");
-  const resolved = path.resolve(base, relative);
-  if (resolved !== base && !resolved.startsWith(`${base}${path.sep}`)) throw new Error("path escapes its batch folder");
-  return resolved;
-}
-async function readInside(base: string, relative: string): Promise<Buffer> {
-  const target = inside(base, relative);
-  const realBase = await fs.realpath(base);
-  const realTarget = await fs.realpath(target);
-  if (realTarget !== realBase && !realTarget.startsWith(`${realBase}${path.sep}`)) throw new Error("symlink path escapes its batch folder");
-  const stat = await fs.lstat(target);
-  if (!stat.isFile()) throw new Error("entry path is not a regular file");
-  return fs.readFile(realTarget);
-}
-
-async function validateImage(bytes: Buffer, allowed: Array<"jpeg" | "png">, needRgba = false): Promise<"image/jpeg" | "image/png"> {
-  const pipeline = sharp(bytes, { failOn: "error", limitInputPixels: 100_000_000 });
-  const metadata = await pipeline.metadata();
-  if (!metadata.format || !allowed.includes(metadata.format as "jpeg" | "png")) throw new Error("image must decode as JPEG or PNG");
-  if (!metadata.width || !metadata.height || metadata.width < 1 || metadata.height < 1) throw new Error("image has invalid dimensions");
-  if (needRgba) {
-    if (metadata.format !== "png" || (metadata.channels ?? 0) < 4) throw new Error("cutout must be an RGBA PNG");
-    const { data, info } = await sharp(bytes).ensureAlpha().raw().toBuffer({ resolveWithObject: true });
-    let foreground = false;
-    for (let i = 3; i < data.length; i += info.channels) if (data[i] > 0) { foreground = true; break; }
-    if (!foreground) throw new Error("cutout alpha channel is empty");
-  }
-  // metadata() alone can accept truncated files; force the full decode before import.
-  await pipeline.clone().toBuffer();
-  return metadata.format === "jpeg" ? "image/jpeg" : "image/png";
-}
-
 function reportFor(batchId: string): ImportReport { return { batchId, imported: [], skipped: [], failed: [] }; }
 
 /** Core function is adapter-injectable for deterministic fixture and failure-recovery checks. */
 export async function importBatch(options: ImportOptions, adapters: ImportAdapters): Promise<{ report: ImportReport; planned: Array<{ sourceSha256: string; type: string }>; unreferencedObjects: string[] }> {
   if (!validBatch(options.batch)) throw new Error("invalid batch ID");
   const root = path.resolve(options.root ?? process.cwd());
-  const processed = path.resolve(root, "wardrobe-data", "processed", options.batch);
-  const incoming = path.resolve(root, "wardrobe-data", "incoming", options.batch);
-  for (const folder of [path.join(root, "wardrobe-data"), path.join(root, "wardrobe-data", "processed"), processed,
-    path.join(root, "wardrobe-data", "incoming"), incoming]) {
-    if ((await fs.lstat(folder)).isSymbolicLink()) throw new Error(`batch directory may not be a symlink: ${folder}`);
-  }
-  const processedParent = await fs.realpath(path.dirname(processed));
-  const incomingParent = await fs.realpath(path.dirname(incoming));
-  const realProcessed = await fs.realpath(processed);
-  const realIncoming = await fs.realpath(incoming);
-  if (!realProcessed.startsWith(`${processedParent}${path.sep}`) || !realIncoming.startsWith(`${incomingParent}${path.sep}`)) throw new Error("batch folder symlink escapes wardrobe-data");
-  const parsed = BatchManifestSchema.parse(JSON.parse((await readInside(realProcessed, "manifest.json")).toString("utf8"))) as BatchManifest;
-  if (parsed.batchId !== options.batch) throw new Error("manifest batch ID does not match requested batch");
+  const { manifest: parsed, processed, incoming } = await loadBatch(root, options.batch);
   const report = reportFor(parsed.batchId);
   const planned: Array<{ sourceSha256: string; type: string }> = [];
   const unreferencedObjects: string[] = [];
@@ -82,17 +37,12 @@ export async function importBatch(options: ImportOptions, adapters: ImportAdapte
       report.skipped.push({ sourceSha256: entry.sourceSha256, reason: "not_approved" });
       continue;
     }
+    let type: ClothingType;
     let source: Buffer;
     let cutout: Buffer;
     let sourceType: "image/jpeg" | "image/png";
     try {
-      if (!entry.type || !entry.cutoutPath || !entry.cutoutSha256) throw new Error("approved entry requires a type and prepared cutout");
-      source = await readInside(incoming, entry.sourcePath);
-      if (sha(source) !== entry.sourceSha256) throw new Error("source digest mismatch");
-      sourceType = await validateImage(source, ["jpeg", "png"]);
-      cutout = await readInside(processed, entry.cutoutPath);
-      if (sha(cutout) !== entry.cutoutSha256) throw new Error("cutout digest mismatch");
-      await validateImage(cutout, ["png"], true);
+      ({ source, cutout, sourceType, type } = await validatePreparedEntry(incoming, processed, entry));
     } catch (error) {
       report.failed.push({ sourceSha256: entry.sourceSha256, message: error instanceof Error ? error.message : String(error) });
       continue;
@@ -103,7 +53,7 @@ export async function importBatch(options: ImportOptions, adapters: ImportAdapte
         report.skipped.push({ sourceSha256: entry.sourceSha256, reason: existing.deletedAt ? "previously_removed" : "already_exists", itemId: existing._id });
         continue;
       }
-      planned.push({ sourceSha256: entry.sourceSha256, type: entry.type });
+      planned.push({ sourceSha256: entry.sourceSha256, type });
       if (options.dryRun) continue;
       const sourceExt = sourceType === "image/jpeg" ? "jpg" : "png";
       const originalPath = `wardrobe/${entry.sourceSha256}/original.${sourceExt}`;
@@ -114,7 +64,7 @@ export async function importBatch(options: ImportOptions, adapters: ImportAdapte
       unreferencedObjects.push(cutoutImage.pathname);
       const now = new Date();
       const document: WardrobeDocument = {
-        _id: (adapters.uuid ?? randomUUID)(), sourceSha256: entry.sourceSha256, type: entry.type,
+        _id: (adapters.uuid ?? randomUUID)(), sourceSha256: entry.sourceSha256, type,
         images: { original, cutout: cutoutImage }, createdAt: now, updatedAt: now, deletedAt: null,
       };
       const inserted = await adapters.repository.insertIfAbsent(document);

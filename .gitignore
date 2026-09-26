@@ -12,5 +12,8 @@ playwright-report/
 test-results/
 *.tsbuildinfo
 
+.DS_Store
+
+
 # Local runtime session artifacts
 *.ses

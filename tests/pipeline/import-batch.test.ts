@@ -5,6 +5,7 @@ import path from "node:path";
 import { createHash, randomUUID } from "node:crypto";
 import sharp from "sharp";
 import type { ImageStore, WardrobeDocument, WardrobeRepository } from "../../src/lib/contracts/persistence";
+import { approveBatch } from "../../scripts/approve-batch";
 import { importBatch } from "../../scripts/import-batch";
 
 const tempRoots: string[] = [];
@@ -37,6 +38,19 @@ async function fixture() {
 afterEach(async () => { await Promise.all(tempRoots.splice(0).map((p) => fs.rm(p, { recursive: true, force: true }))); });
 
 describe("importBatch", () => {
+  it("imports pending files only after numbered CLI approval", async () => {
+    const f = await fixture(); const folder = path.join(f.root, "wardrobe-data/processed/demo");
+    const manifestPath = path.join(folder, "manifest.json");
+    const manifest = JSON.parse(await fs.readFile(manifestPath, "utf8")); manifest.entries[0].reviewStatus = "pending";
+    await fs.writeFile(manifestPath, JSON.stringify(manifest));
+    await fs.writeFile(path.join(folder, "review-index.json"), JSON.stringify({ batchId: "demo", entries: [{ number: 1, sourceSha256: hash(f.source), cutoutSha256: hash(f.cutout) }] }));
+    const adapters = { repository: f.repository, imageStore: f.imageStore };
+    expect((await importBatch({ batch: "demo", root: f.root }, adapters)).report.skipped[0]?.reason).toBe("not_approved");
+    expect(f.writes).toHaveLength(0);
+    await approveBatch({ batch: "demo", root: f.root, items: "1" });
+    expect((await importBatch({ batch: "demo", root: f.root }, adapters)).report.imported).toHaveLength(1);
+    expect(f.docs.size).toBe(1);
+  });
   it("dry run validates and plans without writes", async () => {
     const f = await fixture(); const result = await importBatch({ batch: "demo", root: f.root, dryRun: true }, { repository: f.repository, imageStore: f.imageStore });
     expect(result.planned).toHaveLength(1); expect(result.report.imported).toHaveLength(0); expect(f.writes).toHaveLength(0); expect(f.docs.size).toBe(0);

@@ -4,7 +4,7 @@ import { redirect } from "next/navigation";
 import { CLOTHING_LABELS, CLOTHING_TYPES, ClothingTypeSchema } from "@/lib/contracts/wardrobe";
 import { requireOwner, AuthorizationError } from "@/lib/authorization";
 import { getWardrobeRepository, toItemDTO } from "@/lib/data/wardrobe-repository";
-import { ClothingLabel, TypeFilters, WardrobeHeader } from "@/components/wardrobe/wardrobe-controls";
+import { TypeFilters, WardrobeHeader } from "@/components/wardrobe/wardrobe-controls";
 
 type PageProps = { searchParams: Promise<{ type?: string | string[] }> };
 
@@ -28,7 +28,9 @@ export default async function WardrobePage({ searchParams }: PageProps) {
   }
 
   const total = CLOTHING_TYPES.reduce((sum, type) => sum + counts[type], 0);
-  const items = documents.map(toItemDTO);
+  const items = documents.map(toItemDTO).sort((a, b) =>
+    CLOTHING_TYPES.indexOf(a.type) - CLOTHING_TYPES.indexOf(b.type)
+  );
   return <main className="page-shell">
     <WardrobeHeader total={total} />
     <section className="catalogue-heading"><div><p className="eyebrow">YOUR COLLECTION</p><h1>Wardrobe</h1></div></section>
@@ -36,7 +38,6 @@ export default async function WardrobePage({ searchParams }: PageProps) {
     {items.length === 0 ? <section className="empty-state"><div className="empty-mark">W</div><h2>{total === 0 ? "Your wardrobe is ready" : "No items in this category"}</h2><p>{total === 0 ? "Your catalogue will appear here once your first batch is imported." : "Try another clothing type to see more of your wardrobe."}</p>{total > 0 && <Link className="text-link" href="/">View all items</Link>}</section> :
       <section className="item-grid" aria-label="Wardrobe items">{items.map(item => <Link key={item.id} href={`/items/${item.id}`} className="item-card" aria-label={`View ${CLOTHING_LABELS[item.type]}`}>
         <div className="card-image"><Image src={item.images.cutout} alt={CLOTHING_LABELS[item.type]} width={600} height={600} unoptimized loading="lazy" className="garment-image" /></div>
-        <div className="card-caption"><ClothingLabel type={item.type} /><span className="card-arrow" aria-hidden="true">↗</span></div>
       </Link>)}</section>}
   </main>;
 }
